@@ -47,6 +47,12 @@
   docker compose up -d
   docker logs -f mssql
   ```
+* Add packages
+  ```bash
+  dotnet add package Microsoft.EntityFrameworkCore.Design --version 8.0.4
+  dotnet restore
+  dotnet build
+  ```  
 * Using `dotnet-ef CLI ` for DB migration 
   ```bash
   # Inspect dotnet-ef  
@@ -60,6 +66,7 @@
   # 在整合終端設定 environment，讓 appsettings.Development.json 被使用，並覆寫 ConnectionStrings
   $env:ASPNETCORE_ENVIRONMENT = 'Development'
   $env:ConnectionStrings__Northwind = 'Server=localhost,1433;Database=Northwind;User Id=sa;Password=StrongP@ssw0rd123!;TrustServerCertificate=True;MultipleActiveResultSets=True;'
+  $env:ConnectionStrings__DefaultConnection = 'DataSource=app.db;Cache=Shared'
   #執行 migration（指定 startup project、context，並加 --verbose 查看實際使用的連線）：
   dotnet ef database update --project ..\..\Chapter01\Northwind.EntityModels\ --startup-project . --context NorthwindContext --verbose
   #替代（直接傳入連線字串，不建議在共用環境暴露密碼）
@@ -68,14 +75,14 @@
 * Modify Config:
   ```json
   {
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft.AspNetCore": "Warning"
-    }
-  },
-  "AllowedHosts": "*"
-}
+    "Logging": {
+      "LogLevel": {
+        "Default": "Information",
+        "Microsoft.AspNetCore": "Warning"
+      }
+    },
+    "AllowedHosts": "*"
+  }
 
   ```
   to
