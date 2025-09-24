@@ -28,3 +28,36 @@ To run a SQL script to create the Northwind sample database for a local SQL Serv
 7. In **Object Explorer**, expand the **Northwind** database, and then expand **Tables**.
 8. Right-click **Products**, click **Select Top 1000 Rows**, and note the returned results.
 9. Exit **SQL Server Management Studio**.
+
+
+# Commands to create the solution
+The following commands create the test solution on a Windows machine. For macOS and Unix, update the `ren` command to the OS version of ren to rename a file:
+```bash
+dotnet new sln -o Chapter01
+cd Chapter01
+dotnet new classlib -o Northwind.EntityModels
+delete .\Northwind.EntityModels\Class1.cs
+cd Northwind.EntityModels
+dotnet add package Microsoft.EntityFrameworkCore.SqlServer --version 8.0.20
+dotnet add package Microsoft.EntityFrameworkCore.Design --version 8.0.20
+dotnet ef dbcontext scaffold "Server=127.0.0.1,1433;Database=Northwind;User Id=sa;Password=StrongP@ssw0rd123!;TrustServerCertificate=True;MultipleActiveResultSets=True;" Microsoft.EntityFrameworkCore.SqlServer --namespace Northwind.EntityModels --data-annotations
+cd ..
+dotnet sln add ./Northwind.EntityModels/Northwind.EntityModels.csproj
+dotnet new classlib -o Northwind.DataContext
+delete .\Northwind.DataContext\Class1.cs
+dotnet add ./Northwind.DataContext/Northwind.DataContext.csproj reference ./Northwind.EntityModels/Northwind.EntityModels.csproj
+cd Northwind.DataContext
+dotnet add package Microsoft.EntityFrameworkCore.SqlServer --version 8.0.20
+cd ..
+dotnet sln add ./Northwind.DataContext/Northwind.DataContext.csproj
+dotnet new xunit -o Northwind.Tests
+dotnet add ./Northwind.Tests/Northwind.Tests.csproj reference ./Northwind.DataContext/Northwind.DataContext.csproj
+cd ..
+dotnet sln add ./Northwind.Tests/Northwind.Tests.csproj
+```
+## Creating a class library for entity models using SQL Server
+[See Northwind.EntityModels/README.md](Northwind.EntityModels/README.md) 
+## Creating a class library for the data context using SQL Server
+[See Northwind.DataContext/README.md](Northwind.DataContext/README.md) 
+## Creating a test project to check the integration of the class libraries
+[See Northwind.Tests/README.md](Northwind.Tests/README.md) 

@@ -23,6 +23,7 @@ Next, you will move the context model that represents the database to a separate
    ```
    cli:
    ```bash
+   dotnet add ./Northwind.DataContext/Northwind.DataContext.csproj reference ./Northwind.EntityModels/Northwind.EntityModels.csproj
    dotnet add package Microsoft.EntityFrameworkCore.SqlServer --version 8.0.20 
    ```
 3. Delete the `Class1.cs` file.
