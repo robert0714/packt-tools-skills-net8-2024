@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference
-      Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.6" />
+      Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.20" />
   </ItemGroup>
 
   <ItemGroup>

@@ -102,3 +102,7 @@
   ```
 
 * [SqlConnectionString key code](../../Chapter01/Northwind.DataContext/NorthwindContext.cs?plain=1#L74-L102)
+  ```csharp
+  $env:MY_SQL_USR = 'sa'
+  $env:MY_SQL_PWD = 'StrongP@ssw0rd123!'
+  ```
