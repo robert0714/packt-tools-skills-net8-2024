@@ -100,3 +100,5 @@
     "AllowedHosts": "*"
   }
   ```
+
+* [SqlConnectionString key code](../../Chapter01/Northwind.DataContext/NorthwindContext.cs?plain=1#L74-L102)
