@@ -53,7 +53,7 @@
   dotnet restore
   dotnet build
   ```  
-* Using `dotnet-ef CLI ` for DB migration 
+* [Setting up a database and projects for this book](../../Chapter01/README.md) or Using `dotnet-ef CLI ` for DB migration 
   ```bash
   # Inspect dotnet-ef  
   dotnet tool list -g

@@ -36,15 +36,18 @@ The following commands create the test solution on a Windows machine. For macOS 
 dotnet new sln -o Chapter01
 cd Chapter01
 dotnet new classlib -o Northwind.EntityModels
-delete .\Northwind.EntityModels\Class1.cs
+rm .\Northwind.EntityModels\Class1.cs
 cd Northwind.EntityModels
 dotnet add package Microsoft.EntityFrameworkCore.SqlServer --version 8.0.20
 dotnet add package Microsoft.EntityFrameworkCore.Design --version 8.0.20
+
+# generate entity class models for all tables
 dotnet ef dbcontext scaffold "Server=127.0.0.1,1433;Database=Northwind;User Id=sa;Password=StrongP@ssw0rd123!;TrustServerCertificate=True;MultipleActiveResultSets=True;" Microsoft.EntityFrameworkCore.SqlServer --namespace Northwind.EntityModels --data-annotations
+
 cd ..
 dotnet sln add ./Northwind.EntityModels/Northwind.EntityModels.csproj
 dotnet new classlib -o Northwind.DataContext
-delete .\Northwind.DataContext\Class1.cs
+rm .\Northwind.DataContext\Class1.cs
 dotnet add ./Northwind.DataContext/Northwind.DataContext.csproj reference ./Northwind.EntityModels/Northwind.EntityModels.csproj
 cd Northwind.DataContext
 dotnet add package Microsoft.EntityFrameworkCore.SqlServer --version 8.0.20
