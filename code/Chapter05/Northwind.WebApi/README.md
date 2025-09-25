@@ -106,3 +106,6 @@
   $env:MY_SQL_USR = 'sa'
   $env:MY_SQL_PWD = 'StrongP@ssw0rd123!'
   ```
+# Hands-On with the OpenTelemetry Demo
+* [OpenTelemetry Demo Docs](https://opentelemetry.io/docs/demo/)
+* [opentelemetry-demo](https://github.com/open-telemetry/opentelemetry-demo)
