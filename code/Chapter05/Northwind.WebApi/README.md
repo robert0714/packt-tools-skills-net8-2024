@@ -111,6 +111,8 @@
 - [opentelemetry-demo](https://github.com/open-telemetry/opentelemetry-demo)
   - https://github.com/open-telemetry/opentelemetry-demo/blob/main/src/accounting/README.md
     - https://opentelemetry.io/docs/demo/services/accounting/
+    - [Install OpenTelemetry auto-instrumentation](https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation)
+    - [Get Hands-On: A Practical Guide to Implementing Telemetry in .NET](https://medium.com/@esteban210301/get-hands-on-a-practical-guide-to-implementing-telemetry-in-net-d1466ec95190)
   - https://github.com/open-telemetry/opentelemetry-demo/blob/main/src/cart/README.md
     - https://opentelemetry.io/docs/demo/services/cart/
 - [OpenTelemetry Registry for .NET](https://opentelemetry.io/ecosystem/registry/?component=instrumentation&language=dotnet)

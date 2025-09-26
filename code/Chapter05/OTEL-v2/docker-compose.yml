@@ -1,0 +1,265 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
+x-default-logging: &logging
+  driver: "json-file"
+  options:
+    max-size: "5m"
+    max-file: "2"
+    tag: "{{.Name}}"
+
+networks:
+  default:
+    name: opentelemetry-demo
+    driver: bridge
+    
+services:
+  # Northwind.WebApi
+  # docker compose build northwind_web-api
+  northwind_web-api: 
+    container_name: northwind_web-api
+    build:
+      context: ../../
+      dockerfile: ${FRONTEND_DOCKERFILE} 
+    pull_policy: build
+    deploy:
+      resources:
+        limits:
+          memory: 250M
+    restart: unless-stopped
+    ports:
+      - "${NORTHWIND_WEBAPI_PORT}"
+    environment: 
+      - TZ="Asia/Taipei"
+      - PORT=${NORTHWIND_WEBAPI_PORT}
+      - ASPNETCORE_HTTP_PORTS=${NORTHWIND_WEBAPI_PORT}
+      - ASPNETCORE_URLS=http://*:${NORTHWIND_WEBAPI_PORT}
+      - OTEL_EXPORTER_OTLP_ENDPOINT
+      - OTEL_RESOURCE_ATTRIBUTES
+      - ENV_PLATFORM
+      - OTEL_SERVICE_NAME=northwind_web-api
+      - PUBLIC_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+      - OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
+      - WEB_OTEL_SERVICE_NAME=northwind_web-api
+      - OTEL_COLLECTOR_HOST
+      - FLAGD_HOST
+      - FLAGD_PORT 
+    logging: *logging
+
+  # Frontend Proxy (Envoy)
+  frontend-proxy:
+    container_name: frontend-proxy 
+    build:
+      context: ./
+      dockerfile: ${FRONTEND_PROXY_DOCKERFILE} 
+    pull_policy: build
+    restart: unless-stopped
+    depends_on:
+      jaeger:
+        condition: service_started
+      grafana:
+        condition: service_started 
+    ports:
+      - ${ENVOY_PORT}:${ENVOY_PORT}
+      - ${ENVOY_ADMIN_PORT}:${ENVOY_ADMIN_PORT}
+    environment:
+      - TZ="Asia/Taipei"
+      - NORTHWIND_WEBAPI_PORT
+      - NORTHWIND_WEBAPI_HOST
+      - LOCUST_WEB_HOST
+      - LOCUST_WEB_PORT
+      - GRAFANA_PORT
+      - GRAFANA_HOST
+      - JAEGER_UI_PORT
+      - JAEGER_HOST
+      - OTEL_COLLECTOR_HOST
+      - IMAGE_PROVIDER_HOST
+      - IMAGE_PROVIDER_PORT
+      - OTEL_COLLECTOR_PORT_GRPC
+      - OTEL_COLLECTOR_PORT_HTTP
+      - OTEL_RESOURCE_ATTRIBUTES
+      - OTEL_SERVICE_NAME=frontend-proxy
+      - ENVOY_PORT
+      - ENVOY_ADMIN_PORT
+      - FLAGD_HOST
+      - FLAGD_PORT
+      - FLAGD_UI_HOST
+      - FLAGD_UI_PORT
+    deploy:
+      resources:
+        limits:
+          memory: 65M
+    dns_search: ''
+
+
+  otel-collector:
+    container_name: otel-collector
+    image: ${COLLECTOR_CONTRIB_IMAGE}
+    restart: unless-stopped
+    depends_on:
+      jaeger:
+        condition: service_started
+      opensearch:
+        condition: service_healthy
+    ports:
+      - ${OTEL_COLLECTOR_PORT_GRPC}
+      - ${OTEL_COLLECTOR_PORT_HTTP}
+    volumes:
+      - ${HOST_FILESYSTEM}:/hostfs:ro
+      - ${DOCKER_SOCK}:/var/run/docker.sock:ro
+      - ${OTEL_COLLECTOR_CONFIG}:/etc/otelcol-config.yml
+      - ${OTEL_COLLECTOR_CONFIG_EXTRAS}:/etc/otelcol-config-extras.yml
+    environment:
+      - TZ="Asia/Taipei"
+      - FRONTEND_PROXY_ADDR
+      - IMAGE_PROVIDER_HOST
+      - IMAGE_PROVIDER_PORT
+      - HOST_FILESYSTEM
+      - OTEL_COLLECTOR_HOST
+      - OTEL_COLLECTOR_PORT_GRPC
+      - OTEL_COLLECTOR_PORT_HTTP
+      - POSTGRES_HOST
+      - POSTGRES_PORT
+      - POSTGRES_PASSWORD
+      - GOMEMLIMIT=160MiB
+    command:
+      - '--config=/etc/otelcol-config.yml'
+      - '--config=/etc/otelcol-config-extras.yml'
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: '2'
+        tag: '{{.Name}}'
+    user: '0:0'
+
+  prometheus:
+    container_name: prometheus
+    image: ${PROMETHEUS_IMAGE}
+    restart: unless-stopped
+    ports:
+      - ${PROMETHEUS_PORT}:${PROMETHEUS_PORT}
+    volumes:
+      - ./src/prometheus/prometheus-config.yaml:/etc/prometheus/prometheus-config.yaml
+    environment:
+      - TZ="Asia/Taipei"  
+    command:
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--storage.tsdb.retention.time=1h'
+      - '--config.file=/etc/prometheus/prometheus-config.yaml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+      - '--web.route-prefix=/'
+      - '--web.enable-otlp-receiver'
+      - '--enable-feature=exemplar-storage'
+    deploy:
+      resources:
+        limits:
+          memory: 300M
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: '2'
+        tag: '{{.Name}}'
+
+  opensearch:
+    container_name: opensearch
+    build:
+      context: ./
+      dockerfile: ${OPENSEARCH_DOCKERFILE}
+    pull_policy: build  
+    restart: unless-stopped
+    ports:
+      - '9200'
+    environment:
+      - TZ="Asia/Taipei"
+      - cluster.name=demo-cluster
+      - node.name=demo-node
+      - bootstrap.memory_lock=true
+      - discovery.type=single-node
+      - OPENSEARCH_JAVA_OPTS=-Xms400m -Xmx400m
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+      - DISABLE_SECURITY_PLUGIN=true
+      - _JAVA_OPTIONS
+    healthcheck:
+      test: curl -s http://localhost:9200/_cluster/health | grep -E '"status":"(green|yellow)"'
+      start_period: 10s
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 800M
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: '2'
+        tag: '{{.Name}}'
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+
+  jaeger:
+    container_name: jaeger
+    image: ${JAEGERTRACING_IMAGE}
+    restart: unless-stopped
+    ports:
+      - ${JAEGER_UI_PORT}
+      - ${JAEGER_GRPC_PORT}
+    volumes:
+      - ./src/jaeger/config.yml:/etc/jaeger/config.yml
+    environment:
+      - TZ="Asia/Taipei"
+      - JAEGER_HOST
+      - JAEGER_GRPC_PORT
+      - PROMETHEUS_ADDR
+      - OTEL_COLLECTOR_HOST
+      - OTEL_COLLECTOR_PORT_HTTP
+      - MEMORY_MAX_TRACES=25000
+    command:
+      - '--config=file:/etc/jaeger/config.yml'
+    deploy:
+      resources:
+        limits:
+          memory: 1200M
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: '2'
+        tag: '{{.Name}}'
+
+  grafana:
+    container_name: grafana
+    image: ${GRAFANA_IMAGE}
+    restart: unless-stopped
+    ports:
+      - ${GRAFANA_PORT}
+    volumes:
+      - ./src/grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./src/grafana/provisioning/:/etc/grafana/provisioning/
+    environment:
+      - TZ="Asia/Taipei"
+      - GF_INSTALL_PLUGINS=grafana-opensearch-datasource
+    deploy:
+      resources:
+        limits:
+          memory: 120M
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: '2'
+        tag: '{{.Name}}' 
