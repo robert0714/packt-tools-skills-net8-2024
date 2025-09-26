@@ -102,3 +102,5 @@ docker compose up --force-recreate --remove-orphans --detach
 * Grafana: http://localhost:8080/grafana/
 * Load Generator UI: http://localhost:8080/loadgen/
 * Jaeger UI: http://localhost:8080/jaeger/ui/ 
+> When Northwind.WebApi's environment variable: `ASPNETCORE_ENVIRONMENT=Development`, the swagger would appear !
+> 
