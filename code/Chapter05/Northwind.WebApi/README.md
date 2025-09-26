@@ -109,6 +109,10 @@
 # Hands-On with the OpenTelemetry Demo
 - [OpenTelemetry Demo Docs](https://opentelemetry.io/docs/demo/)
 - [opentelemetry-demo](https://github.com/open-telemetry/opentelemetry-demo)
+  - https://github.com/open-telemetry/opentelemetry-demo/blob/main/src/accounting/README.md
+    - https://opentelemetry.io/docs/demo/services/accounting/
+  - https://github.com/open-telemetry/opentelemetry-demo/blob/main/src/cart/README.md
+    - https://opentelemetry.io/docs/demo/services/cart/
 - [OpenTelemetry Registry for .NET](https://opentelemetry.io/ecosystem/registry/?component=instrumentation&language=dotnet)
 - [OpenTelemetry for .NET](https://opentelemetry.io/docs/languages/net/)
 - [OpenTelemetry for .NET code examples](https://github.com/open-telemetry/opentelemetry-dotnet/tree/main/examples)
