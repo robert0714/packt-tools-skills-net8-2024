@@ -107,5 +107,10 @@
   $env:MY_SQL_PWD = 'StrongP@ssw0rd123!'
   ```
 # Hands-On with the OpenTelemetry Demo
-* [OpenTelemetry Demo Docs](https://opentelemetry.io/docs/demo/)
-* [opentelemetry-demo](https://github.com/open-telemetry/opentelemetry-demo)
+- [OpenTelemetry Demo Docs](https://opentelemetry.io/docs/demo/)
+- [opentelemetry-demo](https://github.com/open-telemetry/opentelemetry-demo)
+- [OpenTelemetry Registry for .NET](https://opentelemetry.io/ecosystem/registry/?component=instrumentation&language=dotnet)
+- [OpenTelemetry for .NET](https://opentelemetry.io/docs/languages/net/)
+- [OpenTelemetry for .NET code examples](https://github.com/open-telemetry/opentelemetry-dotnet/tree/main/examples)
+- [.NET and OTel with Prometheus, Grafana, and Jaeger](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/observability-with-otel)
+- [OTel exporters](https://opentelemetry.io/docs/languages/net/exporters/)
