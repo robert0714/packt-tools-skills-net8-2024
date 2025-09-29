@@ -20,7 +20,7 @@ services:
     container_name: northwind_web-api
     build:
       context: ../../
-      dockerfile: ${FRONTEND_DOCKERFILE} 
+      dockerfile: ${NORTHWIND_WEBAPI_DOCKERFILE} 
     pull_policy: build
     deploy:
       resources:
@@ -44,6 +44,7 @@ services:
       - OTEL_COLLECTOR_HOST
       - FLAGD_HOST
       - FLAGD_PORT 
+      - ASPNETCORE_ENVIRONMENT=Development
     logging: *logging
 
   # Frontend Proxy (Envoy)

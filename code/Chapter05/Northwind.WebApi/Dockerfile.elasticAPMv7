@@ -1,6 +1,5 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
-
 FROM --platform=${BUILDPLATFORM} mcr.microsoft.com/dotnet/sdk:8.0 AS builder
 ARG TARGETARCH
 ARG BUILD_CONFIGURATION=Release
@@ -10,13 +9,7 @@ COPY ["Chapter01", "/src/Chapter01"]
 COPY ["Chapter05/OTEL-v2/pb/demo.proto", "/src/Chapter05/Northwind.WebApi/src/protos/demo.proto"]
 RUN dotnet restore "/src/Chapter05/Northwind.WebApi/Northwind.WebApi.csproj" -r linux-$TARGETARCH
 
-WORKDIR "/src/Chapter05/Northwind.WebApi"
-# RUN dotnet remove package OpenTelemetry.Exporter.Console
-# RUN dotnet remove package OpenTelemetry.Extensions.Hosting
-
-# RUN dotnet remove package OpenTelemetry.Instrumentation.AspNetCore
-# RUN dotnet remove package OpenTelemetry.Instrumentation.EntityFrameworkCore
-# RUN dotnet remove package OpenTelemetry.Instrumentation.SqlClient
+WORKDIR "/src/Chapter05/Northwind.WebApi" 
 
 RUN dotnet tool install -g dotnet-grpc
 ENV PATH="$PATH:/root/.dotnet/tools"
@@ -40,6 +33,17 @@ RUN dotnet build "./Northwind.WebApi.csproj" -r linux-$TARGETARCH -c $BUILD_CONF
 
 # -----------------------------------------------------------------------------
 
+# install curl, wget zip (needed to download the APM agent)
+RUN apt-get update && apt-get install -y curl wget zip  && rm -rf /var/lib/apt/lists/*
+
+ARG AGENT_VERSION=1.34.1
+
+# pull down the zip file based on ${AGENT_VERSION} ARG and unzip                                                                                                                                        
+RUN curl -L -o elastic_apm_profiler_${AGENT_VERSION}.zip https://github.com/elastic/apm-agent-dotnet/releases/download/v${AGENT_VERSION}/elastic_apm_profiler_${AGENT_VERSION}-linux-x64.zip && \
+    unzip elastic_apm_profiler_${AGENT_VERSION}.zip -d /elastic_apm_profiler
+
+# -----------------------------------------------------------------------------    
+
 FROM builder AS publish
 ARG TARGETARCH
 ARG BUILD_CONFIGURATION=Release
@@ -53,18 +57,21 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0
 USER app
 WORKDIR /app
 COPY --from=publish /app/publish .
-COPY ["Chapter05/OTEL-v2-auto-instrumentation/instrument.sh", "/app/instrument.sh"]
+COPY --from=builder /elastic_apm_profiler /elastic_apm_profiler
+# COPY ["Chapter05/elasticAPM-v7/integrations.yml", "/elastic_apm_profiler/"]
 
 USER root
-RUN mkdir -p "/var/log/opentelemetry/dotnet"
-RUN chown app "/var/log/opentelemetry/dotnet"
-RUN chown app "/app/instrument.sh"
-
-# install curl, wget
+# install curl, wget 
 RUN apt-get update && apt-get install -y curl wget && rm -rf /var/lib/apt/lists/*
+
 
 USER app
  
-ENV OTEL_DOTNET_AUTO_TRACES_ADDITIONAL_SOURCES=Northwind.WebApi.Consumer
+ENV CORECLR_ENABLE_PROFILING=1
+ENV CORECLR_PROFILER={FA65FE15-F085-4681-9B20-95E04F6C03CC}
+ENV CORECLR_PROFILER_PATH=/elastic_apm_profiler/libelastic_apm_profiler.so
+ENV ELASTIC_APM_PROFILER_HOME=/elastic_apm_profiler
+# ENV ELASTIC_APM_PROFILER_INTEGRATIONS=/elastic_apm_profiler/integrations.yml
 
-ENTRYPOINT ["./instrument.sh", "dotnet", "Northwind.WebApi.dll"]
+
+ENTRYPOINT [ "dotnet", "Northwind.WebApi.dll"] 

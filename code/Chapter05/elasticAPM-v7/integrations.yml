@@ -1,0 +1,50 @@
+Integrations:
+  # === Web Frameworks ===
+  - Name: AspNetCore
+    Enabled: true
+  - Name: AspNetFullFramework
+    Enabled: false   # 若使用 IIS / ASP.NET Framework 才開
+
+  # === HTTP / 通訊 ===
+  - Name: HttpClient
+    Enabled: true
+  - Name: Grpc
+    Enabled: false   # 若有 gRPC 才開
+  - Name: Kafka
+    Enabled: false   # Confluent.Kafka
+  - Name: RabbitMQ
+    Enabled: false   # RabbitMQ.Client
+  - Name: MassTransit
+    Enabled: false   # 若專案使用 MassTransit 再開
+
+  # === Database / ORM ===
+  - Name: SqlClient
+    Enabled: true    # Microsoft.Data.SqlClient / System.Data.SqlClient
+  - Name: EntityFrameworkCore
+    Enabled: false   # EF Core - 若開啟可能與 SqlClient 重複
+  - Name: EntityFramework6
+    Enabled: false   # 舊版 EF6 專案才需
+  - Name: MySqlData
+    Enabled: false   # MySql.Data
+  - Name: Npgsql
+    Enabled: false   # PostgreSQL
+  - Name: Oracle
+    Enabled: false   # Oracle.ManagedDataAccess / Core
+  - Name: Sqlite
+    Enabled: false   # System.Data.SQLite / Microsoft.Data.Sqlite
+  - Name: MongoDB
+    Enabled: false   # MongoDB.Driver
+
+  # === Caching / Message Broker ===
+  - Name: StackExchangeRedis
+    Enabled: false
+  - Name: AzureServiceBus
+    Enabled: false
+  - Name: AzureStorage
+    Enabled: false
+  - Name: AzureCosmosDb
+    Enabled: false
+
+  # === Elastic 自家元件 ===
+  - Name: ElasticsearchNet
+    Enabled: true    # Elasticsearch.Net / NEST

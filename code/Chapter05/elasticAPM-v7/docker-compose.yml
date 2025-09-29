@@ -1,0 +1,79 @@
+x-default-logging: &logging
+  driver: "json-file"
+  options:
+    max-size: "5m"
+    max-file: "2"
+    tag: "{{.Name}}" 
+services:
+  # Northwind.WebApi
+  # docker compose build northwind_web-api
+  northwind_web-api: 
+    container_name: northwind_web-api
+    build:
+      context: ../../
+      dockerfile: ${NORTHWIND_WEBAPI_DOCKERFILE} 
+    pull_policy: build
+    deploy:
+      resources:
+        limits:
+          memory: 250M
+    restart: unless-stopped
+    ports:
+      - "${NORTHWIND_WEBAPI_PORT}:${NORTHWIND_WEBAPI_PORT}"
+    environment: 
+      - TZ="Asia/Taipei"
+      - PORT=${NORTHWIND_WEBAPI_PORT}
+      - ASPNETCORE_HTTP_PORTS=${NORTHWIND_WEBAPI_PORT}
+      - ASPNETCORE_URLS=http://*:${NORTHWIND_WEBAPI_PORT}
+      - ELASTIC_APM_SERVER_URLS=http://apm-server:8200
+      - ASPNETCORE_ENVIRONMENT=Development
+      # - DOTNET_STARTUP_HOOKS=/elastic_apm_profiler/ElasticApmAgentStartupHook.dll
+      - ELASTIC_APM_PROFILER_HOME=/elastic_apm_profiler
+    logging: *logging
+    networks: ['stack']
+
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.28
+    environment: ['ES_JAVA_OPTS=-Xms2g -Xmx2g','bootstrap.memory_lock=true','discovery.type=single-node', 'http.host=0.0.0.0', 'transport.host=127.0.0.1', 'TZ=Asia/Taipei']
+    ports: 
+    - "9200:9200"
+    networks: ['stack']
+    restart: unless-stopped
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+
+  kibana:
+    container_name: kibana
+    image: docker.elastic.co/kibana/kibana:7.17.28
+    ports: 
+    - "5601:5601"
+    environment:
+    - TZ=Asia/Taipei
+    - SERVER_BASEPATH=/apm
+    - SERVER_REWRITEBASEPATH=true    
+    networks: ['stack']
+    restart: unless-stopped
+    depends_on: ['elasticsearch']
+
+  apm-server:
+    container_name: apm-server
+    image: docker.elastic.co/apm/apm-server:7.17.28
+    ports:
+    - "8200:8200"
+    - "6060:6060"
+    networks: ['stack']
+    restart: unless-stopped
+    environment: ['TZ=Asia/Taipei']
+    depends_on: ['elasticsearch']
+    command: >
+      apm-server -e
+        -E apm-server.rum.enabled=true
+        -E apm-server.rum.event_rate.limit=1000
+        -E apm-server.kibana.path=/apm
+networks: {stack: {}}
